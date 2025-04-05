@@ -1,13 +1,13 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef } from "react"
 import { Upload, X, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { motion, AnimatePresence } from "framer-motion"
+import { usePatient } from "@/context/PatientContext"
 
 interface ImageUploaderProps {
   onUploadComplete: (complete: boolean) => void
@@ -21,28 +21,40 @@ export default function ImageUploader({ onUploadComplete }: ImageUploaderProps) 
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const { patientData, setPatientData } = usePatient()
+
+  const updateFiles = (newFiles: File[]) => {
+    setFiles(newFiles)
+    onUploadComplete(newFiles.length > 0)
+
+    // Update global context
+    if (patientData) {
+      setPatientData({
+        ...patientData,
+        images: newFiles,
+      })
+    }
+  }
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null)
-
     if (e.target.files && e.target.files.length > 0) {
       const selectedFiles = Array.from(e.target.files)
 
-      // Validate file types
       const invalidFiles = selectedFiles.filter((file) => !file.type.startsWith("image/"))
       if (invalidFiles.length > 0) {
         setError("Please upload only image files.")
         return
       }
 
-      // Validate file size (max 5MB per file)
       const oversizedFiles = selectedFiles.filter((file) => file.size > 5 * 1024 * 1024)
       if (oversizedFiles.length > 0) {
         setError("One or more files exceed the 5MB size limit.")
         return
       }
 
-      setFiles((prev) => [...prev, ...selectedFiles])
-      onUploadComplete(true)
+      const combined = [...files, ...selectedFiles]
+      updateFiles(combined)
     }
   }
 
@@ -54,22 +66,20 @@ export default function ImageUploader({ onUploadComplete }: ImageUploaderProps) 
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const droppedFiles = Array.from(e.dataTransfer.files)
 
-      // Validate file types
       const invalidFiles = droppedFiles.filter((file) => !file.type.startsWith("image/"))
       if (invalidFiles.length > 0) {
         setError("Please upload only image files.")
         return
       }
 
-      // Validate file size (max 5MB per file)
       const oversizedFiles = droppedFiles.filter((file) => file.size > 5 * 1024 * 1024)
       if (oversizedFiles.length > 0) {
         setError("One or more files exceed the 5MB size limit.")
         return
       }
 
-      setFiles((prev) => [...prev, ...droppedFiles])
-      onUploadComplete(true)
+      const combined = [...files, ...droppedFiles]
+      updateFiles(combined)
     }
   }
 
@@ -84,12 +94,9 @@ export default function ImageUploader({ onUploadComplete }: ImageUploaderProps) 
   }
 
   const removeFile = (index: number) => {
-    setFiles((prev) => {
-      const newFiles = [...prev]
-      newFiles.splice(index, 1)
-      onUploadComplete(newFiles.length > 0)
-      return newFiles
-    })
+    const newFiles = [...files]
+    newFiles.splice(index, 1)
+    updateFiles(newFiles)
   }
 
   const simulateUpload = () => {
@@ -107,19 +114,6 @@ export default function ImageUploader({ onUploadComplete }: ImageUploaderProps) 
       })
     }, 100)
   }
-
-  // Add sample images after component mounts (for demo purposes)
-  useEffect(() => {
-    // In a real app, this would be removed
-    setTimeout(() => {
-      // Create dummy File objects
-      const dummyFile1 = new File([""], "rbc_sample_1.jpg", { type: "image/jpeg" })
-      const dummyFile2 = new File([""], "rbc_sample_2.jpg", { type: "image/jpeg" })
-
-      setFiles([dummyFile1, dummyFile2])
-      onUploadComplete(true)
-    }, 1000)
-  }, [onUploadComplete])
 
   return (
     <div className="space-y-6">
@@ -156,14 +150,8 @@ export default function ImageUploader({ onUploadComplete }: ImageUploaderProps) 
         <div className="flex flex-col items-center justify-center space-y-3">
           <motion.div
             className="rounded-full bg-muted p-3"
-            animate={{
-              y: [0, -5, 0],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Number.POSITIVE_INFINITY,
-              ease: "easeInOut",
-            }}
+            animate={{ y: [0, -5, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           >
             <Upload className="h-6 w-6 text-teal-600" />
           </motion.div>
@@ -179,84 +167,78 @@ export default function ImageUploader({ onUploadComplete }: ImageUploaderProps) 
         </div>
       </motion.div>
 
-      <AnimatePresence>
-        {files.length > 0 && (
-          <motion.div
-            className="space-y-4"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="text-sm font-medium">Uploaded Files ({files.length})</div>
+      {files.length > 0 && (
+        <motion.div
+          className="space-y-4"
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="text-sm font-medium">Uploaded Files ({files.length})</div>
 
-            <motion.div className="space-y-2">
-              {files.map((file, index) => (
-                <motion.div
-                  key={index}
-                  className="flex items-center justify-between rounded-lg border p-3 hover:border-teal-200 hover:bg-teal-50/30 transition-colors"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="h-10 w-10 rounded-md border bg-muted flex items-center justify-center overflow-hidden">
-                      {file.type.startsWith("image/") ? (
-                        index === 0 ? (
-                          <img src="/images/normal-rbc.png" alt="RBC sample" className="h-full w-full object-cover" />
-                        ) : (
-                          <img src="/images/sickle-rbc.png" alt="RBC sample" className="h-full w-full object-cover" />
-                        )
-                      ) : (
-                        <FileText className="h-5 w-5 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium truncate max-w-[200px]">{file.name}</p>
-                      <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(2)} KB</p>
-                    </div>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      removeFile(index)
-                    }}
-                    className="transition-all duration-300 hover:bg-red-50 hover:text-red-500"
-                  >
-                    <X className="h-4 w-4" />
-                    <span className="sr-only">Remove file</span>
-                  </Button>
-                </motion.div>
-              ))}
-            </motion.div>
-
-            {uploading && (
-              <motion.div className="space-y-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <div className="flex justify-between text-sm">
-                  <span>Uploading...</span>
-                  <span>{uploadProgress}%</span>
-                </div>
-                <Progress value={uploadProgress} className="h-2" />
-              </motion.div>
-            )}
-
-            <div className="flex justify-end">
-              <Button
-                type="button"
-                onClick={simulateUpload}
-                disabled={uploading || files.length === 0}
-                className="bg-teal-600 hover:bg-teal-700 transition-all duration-300"
+          <motion.div className="space-y-2">
+            {files.map((file, index) => (
+              <motion.div
+                key={index}
+                className="flex items-center justify-between rounded-lg border p-3 hover:border-teal-200 hover:bg-teal-50/30 transition-colors"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ delay: index * 0.1 }}
               >
-                Upload Files
-              </Button>
-            </div>
+                <div className="flex items-center space-x-3">
+                  <div className="h-10 w-10 rounded-md border bg-muted flex items-center justify-center overflow-hidden">
+                    {file.type.startsWith("image/") ? (
+                      <img src={URL.createObjectURL(file)} alt="Uploaded" className="h-full w-full object-cover" />
+                    ) : (
+                      <FileText className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium truncate max-w-[200px]">{file.name}</p>
+                    <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(2)} KB</p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    removeFile(index)
+                  }}
+                  className="transition-all duration-300 hover:bg-red-50 hover:text-red-500"
+                >
+                  <X className="h-4 w-4" />
+                  <span className="sr-only">Remove file</span>
+                </Button>
+              </motion.div>
+            ))}
           </motion.div>
-        )}
-      </AnimatePresence>
+
+          {uploading && (
+            <motion.div className="space-y-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <div className="flex justify-between text-sm">
+                <span>Uploading...</span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <Progress value={uploadProgress} className="h-2" />
+            </motion.div>
+          )}
+
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              onClick={simulateUpload}
+              disabled={uploading || files.length === 0}
+              className="bg-teal-600 hover:bg-teal-700 transition-all duration-300"
+            >
+              Upload Files
+            </Button>
+          </div>
+        </motion.div>
+      )}
 
       <motion.div
         className="rounded-lg border p-4 bg-muted/50"
@@ -277,4 +259,3 @@ export default function ImageUploader({ onUploadComplete }: ImageUploaderProps) 
     </div>
   )
 }
-

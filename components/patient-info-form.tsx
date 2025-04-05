@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -9,12 +8,15 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { motion } from "framer-motion"
+import { usePatient } from "@/context/PatientContext"
 
 interface PatientInfoFormProps {
   onFormComplete: (complete: boolean) => void
 }
 
 export default function PatientInfoForm({ onFormComplete }: PatientInfoFormProps) {
+  const { patientData, setPatientData } = usePatient()
+
   const [formData, setFormData] = useState({
     fullName: "",
     age: "",
@@ -27,25 +29,32 @@ export default function PatientInfoForm({ onFormComplete }: PatientInfoFormProps
     currentMedications: "",
   })
 
-  // For demo purposes, pre-fill the form after a delay
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setFormData({
-        fullName: "John Doe",
-        age: "32",
-        gender: "male",
-        email: "john.doe@example.com",
-        phone: "+1 (555) 123-4567",
-        address: "123 Main St, Anytown, USA",
-        medicalHistory: "No previous history of sickle cell disease.",
-        familyHistory: "immediate",
-        currentMedications: "None",
-      })
-      onFormComplete(true)
-    }, 1000)
+    const { fullName, age, gender, phone } = formData
+    const isComplete = fullName !== "" && age !== "" && gender !== "" && phone !== ""
+    onFormComplete(isComplete)
 
-    return () => clearTimeout(timer)
-  }, [onFormComplete])
+    if (isComplete) {
+      setPatientData(prev => {
+        const isChanged =
+          prev?.name !== formData.fullName ||
+          prev?.age !== formData.age ||
+          prev?.gender !== formData.gender ||
+          prev?.location !== formData.address
+
+        if (!isChanged) return prev
+
+        return {
+          ...prev,
+          name: formData.fullName,
+          age: formData.age,
+          gender: formData.gender,
+          location: formData.address,
+          images: prev?.images || [],
+        }
+      })
+    }
+  }, [formData, onFormComplete, setPatientData])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -53,12 +62,6 @@ export default function PatientInfoForm({ onFormComplete }: PatientInfoFormProps
       ...prev,
       [name]: value,
     }))
-
-    // Check if required fields are filled
-    setTimeout(() => {
-      const { fullName, age, gender, phone } = formData
-      onFormComplete(fullName !== "" && age !== "" && gender !== "" && phone !== "")
-    }, 100)
   }
 
   const handleSelectChange = (name: string, value: string) => {
@@ -66,12 +69,6 @@ export default function PatientInfoForm({ onFormComplete }: PatientInfoFormProps
       ...prev,
       [name]: value,
     }))
-
-    // Check if required fields are filled
-    setTimeout(() => {
-      const { fullName, age, gender, phone } = formData
-      onFormComplete(fullName !== "" && age !== "" && gender !== "" && phone !== "")
-    }, 100)
   }
 
   const containerVariants = {
@@ -212,7 +209,10 @@ export default function PatientInfoForm({ onFormComplete }: PatientInfoFormProps
       <motion.div variants={itemVariants} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="familyHistory">Family History of Sickle Cell</Label>
-          <Select value={formData.familyHistory} onValueChange={(value) => handleSelectChange("familyHistory", value)}>
+          <Select
+            value={formData.familyHistory}
+            onValueChange={(value) => handleSelectChange("familyHistory", value)}
+          >
             <SelectTrigger className="transition-all duration-300 focus:border-teal-300 focus:ring-teal-200">
               <SelectValue placeholder="Select option" />
             </SelectTrigger>
@@ -257,4 +257,3 @@ export default function PatientInfoForm({ onFormComplete }: PatientInfoFormProps
     </motion.div>
   )
 }
-
