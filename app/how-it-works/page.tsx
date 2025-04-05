@@ -48,10 +48,11 @@ export default function HowItWorksPage() {
                   <StaggeredChild>
                     <div className="grid md:grid-cols-2 gap-8 items-center">
                       <div className="md:pr-12 order-2 md:order-1">
-                        <div className="md:pl-16 relative">
-                          <div className="absolute left-0 top-0 w-10 h-10 rounded-full bg-teal-600 text-white flex items-center justify-center hidden md:flex">
-                            <span className="font-bold">1</span>
-                          </div>
+                      <div className="md:pl-16 relative">
+  <div className="absolute left-0 top-0 w-10 h-10 rounded-full bg-teal-600 text-white flex items-center justify-center hidden md:flex">
+    <span className="font-bold">1</span>
+  </div>
+
                           <h2 className="text-2xl font-bold mb-4">Registration & Patient Information</h2>
                           <p className="text-muted-foreground mb-4">
                             Create an account and provide basic information about yourself or the patient. This helps us

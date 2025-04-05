@@ -35,7 +35,7 @@ export default function DetectionPage() {
   }
 
   return (
-    <div className="container max-w-5xl py-10">
+    <div className="container max-w-8xl py-10 pr-10 pl-10">
       <div className="mb-8">
         <Link href="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Back to Home

@@ -44,7 +44,7 @@ export default function Home() {
               </AnimatedContainer>
               <FadeIn delay={0.4} direction="left">
                 <img
-                  src="/images/rbc-microscope.png"
+                  src="/rbc-microscope.png"
                   alt="Medical professionals analyzing blood samples"
                   className="mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full lg:order-last shadow-lg transition-all duration-500 hover:shadow-xl"
                   width={550}
@@ -115,7 +115,7 @@ export default function Home() {
             <FadeIn delay={0.3}>
               <div className="mt-12 flex justify-center">
                 <img
-                  src="/images/doctor-lab.png"
+                  src="/doctor-lab.png"
                   alt="Doctor analyzing blood samples in laboratory"
                   className="rounded-xl shadow-lg w-full max-w-3xl transition-all duration-500 hover:shadow-xl"
                 />
@@ -192,22 +192,20 @@ export default function Home() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
                   <div className="overflow-hidden rounded-xl shadow-lg group">
                     <img
-                      src="/images/normal-rbc.png"
+                      src="/normal-rbc.png"
                       alt="Normal red blood cells under microscope"
                       className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
                     />
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                      <p className="text-white font-medium">Normal RBCs</p>
                     </div>
                   </div>
                   <div className="overflow-hidden rounded-xl shadow-lg group">
                     <img
-                      src="/images/sickle-rbc.png"
+                      src="/sickle-rbc.png"
                       alt="Sickle-shaped red blood cells under microscope"
-                      className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-all duration-100 group-hover:scale-105"
                     />
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                      <p className="text-white font-medium">Sickle Cell RBCs</p>
                     </div>
                   </div>
                 </div>

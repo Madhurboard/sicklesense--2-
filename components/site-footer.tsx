@@ -3,7 +3,8 @@ import { Microscope } from "lucide-react"
 
 export default function SiteFooter() {
   return (
-    <footer className="border-t bg-white">
+    
+    <footer className="border-t bg-white pl-5">
       <div className="container flex flex-col gap-4 py-10 md:flex-row md:gap-8 md:py-12">
         <div className="flex flex-col gap-2 md:gap-4 lg:gap-6">
           <div className="flex items-center gap-2">

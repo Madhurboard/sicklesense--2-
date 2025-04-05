@@ -57,7 +57,8 @@ export default function ResultsPage() {
   }
 
   return (
-    <div className="container max-w-5xl py-10">
+    <div className="ml-10">
+    <div className="container max-w-8xl py-10 pr-10">
       <AnimatedContainer>
         <div className="mb-8">
           <Link
@@ -72,7 +73,7 @@ export default function ResultsPage() {
       </AnimatedContainer>
 
       <FadeIn delay={0.3}>
-        <div className="mb-8">
+        <div className=" mb-8">
           {detectionResult ? (
             <Alert className="border-red-200 bg-red-50 animate-pulse">
               <AlertTitle className="text-red-800 flex items-center gap-2 text-lg">
@@ -429,6 +430,7 @@ export default function ResultsPage() {
           </TabsContent>
         </Tabs>
       )}
+    </div>
     </div>
   )
 }

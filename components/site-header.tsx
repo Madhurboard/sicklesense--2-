@@ -10,7 +10,7 @@ export default function SiteHeader() {
   const pathname = usePathname()
 
   return (
-    <header className="bg-white border-b sticky top-0 z-10">
+    <header className="bg-white border-b sticky top-0 z-10 l-">
       <div className="container flex h-16 items-center justify-between px-4 md:px-6">
         <Link href="/" className="flex items-center gap-2">
           <PulseAnimation duration={3}>
