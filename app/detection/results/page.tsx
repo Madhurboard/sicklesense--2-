@@ -27,8 +27,6 @@ import HospitalMap from "@/components/hospital-map"
 import PrecautionsList from "@/components/precautions-list"
 import AnimatedContainer from "@/components/animations/animated-container"
 import FadeIn from "@/components/animations/fade-in"
-import StaggeredChildren from "@/components/animations/staggered-children"
-import StaggeredChild from "@/components/animations/staggered-child"
 import AnimatedNumber from "@/components/animations/animated-number"
 import LoadingAnimation from "@/components/animations/loading-animation"
 import { usePatient } from "@/context/PatientContext"
@@ -38,17 +36,24 @@ export default function ResultsPage() {
   const [activeTab, setActiveTab] = useState("results")
   const [isLoading, setIsLoading] = useState(true)
   const [showResults, setShowResults] = useState(false)
-
-  const detectionResult = true
+  const [predictionResults, setPredictionResults] = useState<string[]>([])
 
   useEffect(() => {
+    const stored = localStorage.getItem("predictionResults")
+    if (stored) {
+      setPredictionResults(JSON.parse(stored))
+    }
+
     const timer = setTimeout(() => setIsLoading(false), 2000)
     const resultsTimer = setTimeout(() => setShowResults(true), 2500)
+
     return () => {
       clearTimeout(timer)
       clearTimeout(resultsTimer)
     }
   }, [])
+
+  const detectionResult = predictionResults.some(r => r.includes("Detected"))
 
   const handleDownloadReport = () => {
     alert("Downloading PDF report...")
@@ -146,7 +151,9 @@ export default function ResultsPage() {
                                     className="h-[150px] w-full object-cover transition-transform duration-500 group-hover:scale-110"
                                   />
                                 </div>
-                                <p className="text-xs p-2 bg-muted">Uploaded Sample {index + 1}</p>
+                                <p className="text-xs p-2 bg-muted">
+                                  {predictionResults[index] || "Pending"}
+                                </p>
                               </div>
                             ))}
                           </div>
@@ -158,21 +165,19 @@ export default function ResultsPage() {
                           <h3 className="text-lg font-medium mb-3">Analysis Metrics</h3>
                           <div className="space-y-3">
                             <div className="flex justify-between border-b pb-2">
-                              <span className="font-medium">Abnormal Cell Count:</span>
+                              <span className="font-medium">Total Samples:</span>
+                              <span>{predictionResults.length}</span>
+                            </div>
+                            <div className="flex justify-between border-b pb-2">
+                              <span className="font-medium">Sickle Cell Detected:</span>
                               <span className="text-red-600">
-                                <AnimatedNumber value={42} suffix="%" />
+                                {predictionResults.filter(r => r.includes("Detected")).length}
                               </span>
                             </div>
                             <div className="flex justify-between border-b pb-2">
-                              <span className="font-medium">Sickle-shaped Cells:</span>
-                              <span className="text-red-600">
-                                <AnimatedNumber value={38} suffix="%" delay={0.2} />
-                              </span>
-                            </div>
-                            <div className="flex justify-between border-b pb-2">
-                              <span className="font-medium">Normal Cells:</span>
+                              <span className="font-medium">Normal Samples:</span>
                               <span>
-                                <AnimatedNumber value={58} suffix="%" delay={0.4} />
+                                {predictionResults.filter(r => r.includes("No")).length}
                               </span>
                             </div>
                             <div className="flex justify-between border-b pb-2">
@@ -191,7 +196,12 @@ export default function ResultsPage() {
                         <h3 className="text-lg font-medium mb-3">Interpretation</h3>
                         <div className="rounded-lg border p-4 bg-gradient-to-r from-white to-teal-50/30">
                           <p className="mb-3">
-                            Your RBC samples show a high presence of sickle-shaped cells. Please consult a healthcare provider for confirmatory testing.
+                            The uploaded RBC samples have been analyzed for signs of sickle cell disease.
+                            {detectionResult ? (
+                              <> Sickle-shaped cells were detected. Please consult a medical professional for confirmation and further diagnosis.</>
+                            ) : (
+                              <> No sickle-shaped cells were detected. However, always confirm with a lab-based test.</>
+                            )}
                           </p>
                         </div>
                       </div>

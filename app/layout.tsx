@@ -3,9 +3,10 @@ import './globals.css'
 import { PatientProvider } from '@/context/PatientContext'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.dev',
+  title: 'SicklSense',
+  description: '',
+  generator: 'Next.js',
+  applicationName: 'SicklSense',
 }
 
 export default function RootLayout({

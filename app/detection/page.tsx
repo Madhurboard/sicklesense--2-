@@ -28,6 +28,9 @@ export default function DetectionPage() {
   const [activeTab, setActiveTab] = useState("patient-info")
   const [formComplete, setFormComplete] = useState(false)
   const [uploadComplete, setUploadComplete] = useState(false)
+  const [consentChecked, setConsentChecked] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
   const { patientData } = usePatient()
 
   const handleFormComplete = (complete: boolean) => {
@@ -43,8 +46,49 @@ export default function DetectionPage() {
       setActiveTab("upload-images")
     } else if (activeTab === "upload-images" && uploadComplete) {
       setActiveTab("review")
-    } else if (activeTab === "review") {
+    }
+  }
+
+  const handleSubmitForAnalysis = async () => {
+    if (!patientData?.images || patientData.images.length === 0) {
+      alert("Please upload at least one image.")
+      return
+    }
+
+    if (!consentChecked) {
+      alert("Please provide consent before submitting.")
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      const results: string[] = []
+
+      for (const file of patientData.images) {
+        const formData = new FormData()
+        formData.append("file", file)
+
+        const response = await fetch("http://localhost:8001/predict", {
+          method: "POST",
+          body: formData,
+        })
+
+        if (!response.ok) {
+          throw new Error("Failed to analyze image")
+        }
+
+        const data = await response.json()
+        results.push(data.result)
+      }
+
+      localStorage.setItem("predictionResults", JSON.stringify(results))
       window.location.href = "/detection/results"
+    } catch (err) {
+      console.error(err)
+      alert("An error occurred while submitting your images.")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -74,7 +118,7 @@ export default function DetectionPage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* STEP 1: PATIENT INFO */}
+        {/* STEP 1 */}
         <TabsContent value="patient-info" className="mt-6">
           <Card>
             <CardHeader>
@@ -97,7 +141,7 @@ export default function DetectionPage() {
           </Card>
         </TabsContent>
 
-        {/* STEP 2: UPLOAD IMAGES */}
+        {/* STEP 2 */}
         <TabsContent value="upload-images" className="mt-6">
           <Card>
             <CardHeader>
@@ -120,7 +164,7 @@ export default function DetectionPage() {
           </Card>
         </TabsContent>
 
-        {/* STEP 3: REVIEW & SUBMIT */}
+        {/* STEP 3 */}
         <TabsContent value="review" className="mt-6">
           <Card>
             <CardHeader>
@@ -131,7 +175,7 @@ export default function DetectionPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {/* PATIENT INFO */}
+                {/* Patient Info */}
                 {patientData && (
                   <div>
                     <h3 className="text-lg font-medium">Patient Information</h3>
@@ -156,8 +200,8 @@ export default function DetectionPage() {
                   </div>
                 )}
 
-                {/* UPLOADED IMAGES */}
-                {patientData?.images && patientData.images.length > 0 ? (
+                {/* Uploaded Images */}
+                {patientData?.images?.length > 0 ? (
                   <div>
                     <h3 className="text-lg font-medium">Uploaded Images</h3>
                     <div className="mt-3 grid grid-cols-1 gap-4 rounded-lg border p-4 sm:grid-cols-2 md:grid-cols-3">
@@ -179,12 +223,18 @@ export default function DetectionPage() {
                   <p className="text-sm text-muted-foreground">No images uploaded.</p>
                 )}
 
-                {/* CONSENT */}
+                {/* Consent */}
                 <div>
                   <h3 className="text-lg font-medium">Consent</h3>
                   <div className="mt-3 rounded-lg border p-4">
                     <Label htmlFor="consent" className="flex items-start gap-2">
-                      <Input type="checkbox" id="consent" className="mt-1" />
+                      <Input
+                        type="checkbox"
+                        id="consent"
+                        className="mt-1"
+                        checked={consentChecked}
+                        onChange={(e) => setConsentChecked(e.target.checked)}
+                      />
                       <span>
                         I confirm that all information provided is accurate and I consent to the analysis of the
                         uploaded images. I understand that this tool is for screening purposes only and does not replace
@@ -199,8 +249,12 @@ export default function DetectionPage() {
               <Button variant="outline" onClick={() => setActiveTab("upload-images")}>
                 Previous Step
               </Button>
-              <Button onClick={handleNextTab}>
-                Submit for Analysis <ArrowRight className="ml-2 h-4 w-4" />
+              <Button
+                onClick={handleSubmitForAnalysis}
+                disabled={!consentChecked || isSubmitting}
+              >
+                {isSubmitting ? "Submitting..." : "Submit for Analysis"}{" "}
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </CardFooter>
           </Card>
